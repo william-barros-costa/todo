@@ -23,16 +23,34 @@ Global Options:
 
 Run 'docker COMMAND --help' for more information on a command.`
 
+var commands [5]string = [5]string{"add", "list", "delete", "edit", "complete"}
+
 func main() {
 	if len(os.Args) == 1 {
 		print_help()
-		os.Exit(0)
+		return
 	}
-	fmt.Println(os.Args)
+	get_command(os.Args)
 }
 
 func print_help() {
 	fmt.Fprintln(os.Stdout, []any{help_message}...)
+}
+
+func get_command(args []string) {
+	var command string = args[1]
+	args = args[2:]
+
+	if command == `-h` || command == "--help" {
+		print_help()
+		return
+	}
+
+	for _, c := range commands {
+		if command == c {
+			fmt.Println("command found")
+		}
+	}
 }
 
 /*
