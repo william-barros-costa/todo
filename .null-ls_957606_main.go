@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // Uses docopt format
@@ -25,22 +26,20 @@ Run 'todo COMMAND help' for more information on a command.`
 
 const add_help_message string = `Usage: todo add <number> <task_1> ... <task_number>`
 
-var commands map[string]func([]string) = map[string]func([]string){
-	"add": function_add,
-	// "list":     function_list,
-	// "delete":   function_delete,
-	// "edit":     function_edit,
-	// "complete": function_complete,
-	// "help":     function_help,
-}
+var commands [6]string = [6]string{"add", "list", "delete", "edit", "complete", "help"}
 
 func main() {
 	if len(os.Args) == 1 {
 		print_help()
 		return
 	}
-	if command, ok := commands[os.Args[1]]; ok {
-		command(os.Args[2:])
+	var command string = os.Args[1]
+	if is_valid_command(command) {
+		switch command {
+		case "add":
+			println("activated add")
+			break
+		}
 	} else {
 		print_help()
 	}
@@ -50,14 +49,20 @@ func print_help() {
 	fmt.Fprintln(os.Stdout, []any{help_message}...)
 }
 
-func function_add(args []string) {
-	if args[0] == "help" {
-		fmt.Println(add_help_message)
-		return
+func is_valid_command(command string) bool {
+	for _, c := range commands {
+		if command == c {
+			return true
+		}
 	}
+	return false
+}
 
-	for _, t := range args[1:] {
-		fmt.Println("Task:", t)
+func add(args []string) {
+	int, error := strconv.Atoi(args[0])
+	if error != nil {
+		print_help()
+		return
 	}
 }
 
