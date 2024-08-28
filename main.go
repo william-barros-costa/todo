@@ -56,7 +56,7 @@ func function_add(args []string) {
 		return
 	}
 
-	for _, t := range args[1:] {
+	for _, t := range args {
 		fmt.Println("Task:", t)
 	}
 }
