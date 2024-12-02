@@ -25,13 +25,42 @@ Run 'todo COMMAND help' for more information on a command.`
 
 const add_help_message string = `Usage: todo add <number> <task_1> ... <task_number>`
 
-var commands map[string]func([]string) = map[string]func([]string){
+var commands map[string]func([]string, tasks) = map[string]func([]string, tasks){
 	"add": function_add,
-	// "list":     function_list,
+	"list":     function_list,
 	// "delete":   function_delete,
 	// "edit":     function_edit,
 	// "complete": function_complete,
 	// "help":     function_help,
+}
+
+type task struct {
+	name      string
+	completed bool
+}
+
+type tasks struct {
+	tasklist []task
+}
+
+func (t tasks) addTask(name string) {
+	newTask := task{name: name, completed: false}
+	t.tasklist = append(t.tasklist, newTask)
+}
+
+func (t tasks) toString() string {
+	var representation string
+	for _, task := range t.tasklist {
+		if task.completed {
+			representation += " [X] "
+		} else {
+			representation += " [X] "
+		}
+		representation += task.name
+		representation += "\n"
+	}
+	representation += "\n"
+	return representation
 }
 
 func main() {
@@ -39,8 +68,11 @@ func main() {
 		print_help()
 		return
 	}
+
+	tasks := tasks{}
+
 	if command, ok := commands[os.Args[1]]; ok {
-		command(os.Args[2:])
+		command(os.Args[2:], tasks)
 	} else {
 		print_help()
 	}
@@ -50,15 +82,16 @@ func print_help() {
 	fmt.Fprintln(os.Stdout, []any{help_message}...)
 }
 
-func function_add(args []string) {
+func function_list(args []string, t tasks)  {
+	fmt.Println(tasks.toString())
+}
+
+func function_add(args []string, t tasks) {
 	if args[0] == "help" {
 		fmt.Println(add_help_message)
 		return
 	}
 
-	for _, t := range args {
-		fmt.Println("Task:", t)
-	}
 }
 
 /*
