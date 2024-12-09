@@ -25,9 +25,9 @@ Run 'todo COMMAND help' for more information on a command.`
 
 const add_help_message string = `Usage: todo add <number> <task_1> ... <task_number>`
 
-var commands map[string]func([]string, tasks) = map[string]func([]string, tasks){
-	"add": function_add,
-	"list":     function_list,
+var commands map[string]func([]string, *tasks) = map[string]func([]string, *tasks){
+	"add":  function_add,
+	"list": function_list,
 	// "delete":   function_delete,
 	// "edit":     function_edit,
 	// "complete": function_complete,
@@ -35,28 +35,28 @@ var commands map[string]func([]string, tasks) = map[string]func([]string, tasks)
 }
 
 type task struct {
-	name      string
-	completed bool
+	Name      string
+	Completed bool
 }
 
 type tasks struct {
-	tasklist []task
+	Tasklist []task
 }
 
-func (t tasks) addTask(name string) {
-	newTask := task{name: name, completed: false}
-	t.tasklist = append(t.tasklist, newTask)
+func (t *tasks) addTask(name string) {
+	newTask := task{Name: name, Completed: false}
+	t.Tasklist = append(t.Tasklist, newTask)
 }
 
 func (t tasks) toString() string {
 	var representation string
-	for _, task := range t.tasklist {
-		if task.completed {
+	for _, task := range t.Tasklist {
+		if task.Completed {
 			representation += " [X] "
 		} else {
-			representation += " [X] "
+			representation += " [] "
 		}
-		representation += task.name
+		representation += task.Name
 		representation += "\n"
 	}
 	representation += "\n"
@@ -72,31 +72,39 @@ func main() {
 	tasks := tasks{}
 
 	if command, ok := commands[os.Args[1]]; ok {
-		command(os.Args[2:], tasks)
+		command(os.Args[2:], &tasks)
 	} else {
 		print_help()
 	}
+	function_list(nil, &tasks)
 }
 
 func print_help() {
 	fmt.Fprintln(os.Stdout, []any{help_message}...)
 }
 
-func function_list(args []string, t tasks)  {
-	fmt.Println(tasks.toString())
+func function_list(args []string, t *tasks) {
+	fmt.Println(t.toString())
 }
 
-func function_add(args []string, t tasks) {
-	if args[0] == "help" {
-		fmt.Println(add_help_message)
-		return
+func function_add(args []string, t *tasks) {
+	for _, task := range args {
+		t.addTask(task)
 	}
+}
 
+func function_delete(args []string, t *tasks) {
+	newTasks := make([]task, 0)
+	for _, arg := range args {
+		for _, task := range t.Tasklist {
+			if task.Name != arg {
+				newTasks = append(newTasks, task)
+			}
+		}
+	}
 }
 
 /*
-Add Task
-List Tasks
 Remove Task
 Edit Task
 Mark completed
