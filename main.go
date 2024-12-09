@@ -26,7 +26,7 @@ Run 'todo COMMAND help' for more information on a command.`
 
 const add_help_message string = `Usage: todo add <number> <task_1> ... <task_number>`
 
-var commands map[string]func([]string, *tasks) = map[string]func([]string, *tasks){
+var commands map[string]func([]string, *todo) = map[string]func([]string, *todo){
 	"add":    function_add,
 	"list":   function_list,
 	"delete": function_delete,
@@ -40,20 +40,20 @@ type task struct {
 	Completed bool
 }
 
-type tasks struct {
+type todo struct {
 	Tasklist []task
 }
 
-func (t *tasks) addTask(name string) {
+func (t *todo) addTask(name string) {
 	newTask := task{Name: name, Completed: false}
 	t.Tasklist = append(t.Tasklist, newTask)
 }
 
-func (t *tasks) toJson() ([]byte, error) {
+func (t *todo) toJson() ([]byte, error) {
 	return json.MarshalIndent(t, "", "  ")
 }
 
-func (t tasks) toString() string {
+func (t todo) toString() string {
 	var representation string
 	for _, task := range t.Tasklist {
 		if task.Completed {
@@ -68,10 +68,33 @@ func (t tasks) toString() string {
 	return representation
 }
 
-func saveFile(location string, t *tasks) {
+func saveFile(location string, t *todo) {
+	if location == "" {
+		location = "tasks.json"
+	}
 	if bytes, error := t.toJson(); error == nil {
 		os.WriteFile(location, bytes, 0666)
 	}
+}
+
+func importTasks(location string) todo {
+	if location == "" {
+		location = "tasks.json"
+	}
+
+	var jsonBytes []byte
+	var err error
+
+	if jsonBytes, err = os.ReadFile(location); err != nil {
+		return todo{}
+	}
+
+	var importedTasks todo
+
+	if err = json.Unmarshal(jsonBytes, &importedTasks); err != nil {
+		return todo{}
+	}
+	return importedTasks
 }
 
 func main() {
@@ -80,32 +103,32 @@ func main() {
 		return
 	}
 
-	tasks := tasks{}
+	todo := importTasks("")
 
 	if command, ok := commands[os.Args[1]]; ok {
-		command(os.Args[2:], &tasks)
+		command(os.Args[2:], &todo)
 	} else {
 		print_help()
 	}
-	function_list(nil, &tasks)
-	saveFile("tasks.json", &tasks)
+	function_list(nil, &todo)
+	saveFile("", &todo)
 }
 
 func print_help() {
 	fmt.Fprintln(os.Stdout, []any{help_message}...)
 }
 
-func function_list(args []string, t *tasks) {
+func function_list(args []string, t *todo) {
 	fmt.Println(t.toString())
 }
 
-func function_add(args []string, t *tasks) {
+func function_add(args []string, t *todo) {
 	for _, task := range args {
 		t.addTask(task)
 	}
 }
 
-func function_delete(args []string, t *tasks) {
+func function_delete(args []string, t *todo) {
 	newTasks := make([]task, 0)
 	for _, arg := range args {
 		for _, task := range t.Tasklist {
@@ -114,10 +137,10 @@ func function_delete(args []string, t *tasks) {
 			}
 		}
 	}
+	t.Tasklist = newTasks
 }
 
 /*
-Remove Task
 Edit Task
 Mark completed
 List Completed tasks
