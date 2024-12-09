@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
@@ -26,9 +27,9 @@ Run 'todo COMMAND help' for more information on a command.`
 const add_help_message string = `Usage: todo add <number> <task_1> ... <task_number>`
 
 var commands map[string]func([]string, *tasks) = map[string]func([]string, *tasks){
-	"add":  function_add,
-	"list": function_list,
-	// "delete":   function_delete,
+	"add":    function_add,
+	"list":   function_list,
+	"delete": function_delete,
 	// "edit":     function_edit,
 	// "complete": function_complete,
 	// "help":     function_help,
@@ -48,6 +49,10 @@ func (t *tasks) addTask(name string) {
 	t.Tasklist = append(t.Tasklist, newTask)
 }
 
+func (t *tasks) toJson() ([]byte, error) {
+	return json.MarshalIndent(t, "", "  ")
+}
+
 func (t tasks) toString() string {
 	var representation string
 	for _, task := range t.Tasklist {
@@ -61,6 +66,12 @@ func (t tasks) toString() string {
 	}
 	representation += "\n"
 	return representation
+}
+
+func saveFile(location string, t *tasks) {
+	if bytes, error := t.toJson(); error == nil {
+		os.WriteFile(location, bytes, 0666)
+	}
 }
 
 func main() {
@@ -77,6 +88,7 @@ func main() {
 		print_help()
 	}
 	function_list(nil, &tasks)
+	saveFile("tasks.json", &tasks)
 }
 
 func print_help() {
